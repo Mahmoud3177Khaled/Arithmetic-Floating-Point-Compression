@@ -58,33 +58,33 @@ public class Arth_floating {
     public static void writeToBinFile(String doubleBinary, String outputFileName) {
 
         // write compressed bits to the bin file
-                // System.out.print("Compressed binary file name: ");
-                // String binaryFileName = consoleScanner.next() + ".bin";
-                try (FileOutputStream binaryWriter = new FileOutputStream(outputFileName + ".bin")) {
-                // calc padding len
-                int paddingLength = 8 - (doubleBinary.length() % 8);
-                if (paddingLength == 8) paddingLength = 0; // if size is a multiple of 8 -> no padding
+        // System.out.print("Compressed binary file name: ");
+        // String binaryFileName = consoleScanner.next() + ".bin";
+        try (FileOutputStream binaryWriter = new FileOutputStream(outputFileName + ".bin")) {
+        // calc padding len
+        int paddingLength = 8 - (doubleBinary.length() % 8);
+        if (paddingLength == 8) paddingLength = 0; // if size is a multiple of 8 -> no padding
 
-                // save padding len in first byte
-                binaryWriter.write(paddingLength);
-                // do the padding for as many required to be a multiple of 8
-                while (doubleBinary.length() % 8 != 0) {
-                    doubleBinary += "0";
-                }
+        // save padding len in first byte
+        binaryWriter.write(paddingLength);
+        // do the padding for as many required to be a multiple of 8
+        while (doubleBinary.length() % 8 != 0) {
+            doubleBinary += "0";
+        }
 
-                // write to txt file for preview
-                FileWriter out = new FileWriter("doublebin.txt");
-                out.write(doubleBinary);
-                out.close();
+        // write to txt file for preview
+        FileWriter out = new FileWriter("doublebin.txt");
+        out.write(doubleBinary);
+        out.close();
 
-                // write data in bin file
-                for (int i = 0; i < doubleBinary.length(); i += 8) {
-                    String byteString = doubleBinary.substring(i, i + 8);
-                    int byteValue = Integer.parseInt(byteString, 2);
-                    binaryWriter.write(byteValue);
-                }
+        // write data in bin file
+        for (int i = 0; i < doubleBinary.length(); i += 8) {
+            String byteString = doubleBinary.substring(i, i + 8);
+            int byteValue = Integer.parseInt(byteString, 2);
+            binaryWriter.write(byteValue);
+        }
 
-                // System.out.println("Compressed binary data saved to " + "doublebin.bin");
+        // System.out.println("Compressed binary data saved to " + "doublebin.bin");
 
     } catch(Exception e) {
         System.out.println("didnt find file");
@@ -94,26 +94,26 @@ public class Arth_floating {
 
     public static String readFromBinFile(String inputToDecompress) {
         // reading from binary file
-            String doubleDecimal = "";
-            try (FileInputStream binaryReader = new FileInputStream(inputToDecompress +".bin")) {
-                int byteValue;
-                // read padding length (first byte in binary file)
-                int paddingLength = binaryReader.read(); // First byte is the padding length
+        String doubleDecimal = "";
+        try (FileInputStream binaryReader = new FileInputStream(inputToDecompress +".bin")) {
+            int byteValue;
+            // read padding length (first byte in binary file)
+            int paddingLength = binaryReader.read(); // First byte is the padding length
 
-                // read rest of compressed data from the bin file
-                while ((byteValue = binaryReader.read()) != -1) {
-                    String byteString = String.format("%8s", Integer.toBinaryString(byteValue & 0xFF)).replace(' ', '0');
-                    doubleDecimal += byteString;
-                }
-                // System.out.println(" binary double read successfully.");
-
-                // remove extra bits used for padding
-                doubleDecimal = doubleDecimal.substring(0, doubleDecimal.length() - paddingLength);
-
-            } catch (IOException e) {
-                System.out.println("didnt find filexx");
-                // System.out.println("Couldn't read from binary file: " + e.getMessage());
+            // read rest of compressed data from the bin file
+            while ((byteValue = binaryReader.read()) != -1) {
+                String byteString = String.format("%8s", Integer.toBinaryString(byteValue & 0xFF)).replace(' ', '0');
+                doubleDecimal += byteString;
             }
+            // System.out.println(" binary double read successfully.");
+
+            // remove extra bits used for padding
+            doubleDecimal = doubleDecimal.substring(0, doubleDecimal.length() - paddingLength);
+
+        } catch (IOException e) {
+            System.out.println("didnt find filexx");
+            // System.out.println("Couldn't read from binary file: " + e.getMessage());
+        }
 
         return doubleDecimal;
     }
@@ -123,7 +123,10 @@ public class Arth_floating {
         String inputData = "";
         try {
             Scanner inscan = new Scanner(input);
-            inputData = inscan.nextLine();
+            while(inscan.hasNextLine()) {
+                inputData += inscan.nextLine();
+                inputData += "$";
+            }
             
         } catch (FileNotFoundException e) {
             System.out.println("didnt find file");
@@ -133,13 +136,13 @@ public class Arth_floating {
         return inputData;
     }
 
-    public static void writeRangesMap(Map<Character, CharEntry> rangesMap) {
+    public static void writeProbMap(Map<Character, Double> probMap) {
         try {
 
-            FileWriter output = new FileWriter("rangesMap.txt");
+            FileWriter output = new FileWriter("probMap.txt");
 
-            for (Map.Entry<Character, CharEntry> entry : rangesMap.entrySet()) {
-                String line = entry.getKey().toString() + " " + entry.getValue().lower + " " + entry.getValue().upper + "\n";
+            for (Map.Entry<Character, Double> entry : probMap.entrySet()) {
+                String line = entry.getKey().toString() + " " + entry.getValue() + "\n";
                 output.write(line);
             }
 
@@ -152,32 +155,33 @@ public class Arth_floating {
         
     }
 
-    public static Map<Character, CharEntry> readRangesMap() {
+    public static Map<Character, CharEntry> readProbMap() {
 
         Map<Character, CharEntry> rangesMap = new HashMap<>();
+        Map<Character, Double> probMap = new HashMap<>();
 
         Character chr;
-        double lower = 0.0;
-        double upper = 0.0;
+        double prob = 0.0;
 
 
         try {
-            Scanner input = new Scanner(new File("rangesMap.txt"));
+            Scanner input = new Scanner(new File("probMap.txt"));
 
             while (input.hasNextLine()) {
                 String line = input.nextLine();
-
                 chr = line.charAt(0);
-                String subline = line.substring(2);
-                String[] lowerAndUpper = subline.split(" ");
 
-                lower = Double.parseDouble(lowerAndUpper[0]);
-                upper = Double.parseDouble(lowerAndUpper[1]);
+                prob = Double.parseDouble(line.substring(2));
 
-                CharEntry newEntry = new CharEntry(lower, upper);
-                rangesMap.put(chr, newEntry);
+                probMap.put(chr, prob);
+            }
 
+            double currLower = 0.0;
+            for (Map.Entry<Character, Double> entry : probMap.entrySet()) {
+                CharEntry newCharEntry = new CharEntry(currLower, currLower + entry.getValue());
+                currLower += entry.getValue();
 
+                rangesMap.put(entry.getKey(), newCharEntry);
             }
             
         } catch (FileNotFoundException e) {
@@ -238,7 +242,7 @@ public class Arth_floating {
         }
         // System.out.println(globalLower + "   " + globalUpper);
 
-        writeRangesMap(rangesMap);
+        writeProbMap(probMap);
 
         try {
 
@@ -257,7 +261,7 @@ public class Arth_floating {
 
     public static String decompress(double doubleDec) {
 
-        Map<Character, CharEntry> rangesMap = readRangesMap();
+        Map<Character, CharEntry> rangesMap = readProbMap();
         String decompressedData = "";
 
         double globalLower = 0.0;
@@ -299,6 +303,7 @@ public class Arth_floating {
 
             try {
 
+                decompressedData = decompressedData.replace('$', '\n');
                 FileWriter out = new FileWriter("output.txt");
                 out.write(decompressedData);
                 out.close();
